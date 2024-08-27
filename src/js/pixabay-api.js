@@ -13,7 +13,7 @@ export const fetchPhotos = async (searchQuery, page) => {
     per_page: 15,
   });
 
-  const { data } = await axios(`${BASE_URL}?${urlParams}`);
+  const { data } = await axios.get(`${BASE_URL}?${urlParams}`);
 
   return data;
 };

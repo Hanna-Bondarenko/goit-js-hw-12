@@ -4,7 +4,6 @@
 .container {
   width: 1200px;
   padding: 15px;
-
   margin-left: auto;
   margin-right: auto;
 }
@@ -81,6 +80,7 @@
   border-bottom: 4px solid #ff3d00;
   border-left: 4px solid transparent;
 }
+
 @keyframes rotation {
   0% {
     transform: rotate(0deg);
@@ -89,29 +89,10 @@
     transform: rotate(360deg);
   }
 }
-.loader {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  position: relative;
-  animation: rotate 1s linear infinite;
-}
-.loader::before {
-  content: '';
-  box-sizing: border-box;
-  position: absolute;
-  inset: 0px;
-  border-radius: 50%;
-  border: 5px solid #fff;
-  animation: prixClipFix 2s linear infinite;
-}
 
 .js-load-more-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: row;
-  gap: 10px;
+  display: block;
+  margin: 0 auto;
   border-radius: 8px;
   padding: 8px 16px;
   width: 125px;
@@ -124,10 +105,8 @@
   color: #fff;
 }
 
-@keyframes rotate {
-  100% {
-    transform: rotate(360deg);
-  }
+.js-load-more-btn.is-hidden {
+  display: none;
 }
 
 @keyframes prixClipFix {

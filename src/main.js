@@ -7,7 +7,7 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 const searchFormEl = document.querySelector('.js-search-form');
 const galleryEl = document.querySelector('.js-gallery');
 const loaderEl = document.querySelector('.js-loader');
-const LoadMoreBtnEl = document.querySelector('.js-load-more-btn');
+const loadMoreBtnEl = document.querySelector('.js-load-more-btn');
 
 let currentPage = 1;
 let searchValue = '';
@@ -20,9 +20,21 @@ const lightbox = new SimpleLightbox('.js-gallery a', {
 const onSearchFormSubmit = async event => {
   event.preventDefault();
 
-  searchValue = searchFormEl.elements.user_query.value;
+  searchValue = searchFormEl.elements.user_query.value.trim();
+
+  if (searchValue === '') {
+    iziToast.error({
+      message:
+        'Sorry, there is no image matching your search query. Please try again!',
+      position: 'topRight',
+    });
+    return;
+  }
 
   currentPage = 1;
+  loaderEl.classList.remove('is-hidden');
+  galleryEl.innerHTML = '';
+  loadMoreBtnEl.classList.add('is-hidden');
 
   try {
     const data = await fetchPhotos(searchValue, currentPage);
@@ -34,43 +46,65 @@ const onSearchFormSubmit = async event => {
         position: 'topRight',
       });
 
-      galleryEl.innerHTML = '';
-      searchFormEl.reset();
       return;
     }
 
-    galleryEl.innerHTML = data.hits.map(createGalleryCardTemplate).join('');
+    const galleryCardsTemplate = data.hits
+      .map(imgDetails => createGalleryCardTemplate(imgDetails))
+      .join('');
+
+    galleryEl.innerHTML = galleryCardsTemplate;
+    smoothScroll();
     lightbox.refresh();
-    LoadMoreBtnEl.classList.remove('is-hidden');
+    searchFormEl.reset();
+
+    if (data.totalHits > 15) {
+      loadMoreBtnEl.classList.remove('is-hidden');
+    }
   } catch (error) {
-    console.log(error);
+    iziToast.error({ message: error.message, position: 'topRight' }); //+11//
+  } finally {
+    loaderEl.classList.add('is-hidden');
   }
 };
 
-const onLoadMoreClick = async () => {
-  currentPage += 1;
+const onLoadMore = async () => {
+  currentPage++;
+  loaderEl.classList.remove('is-hidden');
 
   try {
     const data = await fetchPhotos(searchValue, currentPage);
 
-    galleryEl.insertAdjacentHTML(
-      'beforeend',
-      data.hits.map(createGalleryCardTemplate).join('')
-    );
+    const galleryCardsTemplate = data.hits
+      .map(imgDetails => createGalleryCardTemplate(imgDetails))
+      .join('');
+
+    galleryEl.insertAdjacentHTML('beforeend', galleryCardsTemplate);
+
+    smoothScroll();
     lightbox.refresh();
 
-    if (currentPage * 15 >= data.totalHits) {
+    if (Math.ceil(data.totalHits / 15) === currentPage) {
+      loadMoreBtnEl.classList.add('is-hidden');
       iziToast.info({
-        message: "We're sorry, but you've reached the end of search results.",
+        message: "We're sorry, but you've reached the end of search results",
         position: 'topRight',
       });
-
-      LoadMoreBtnEl.classList.add('is-hidden');
     }
   } catch (error) {
-    console.log(error);
+    iziToast.error({ message: error.message, position: 'topRight' }); //+11//
+  } finally {
+    loaderEl.classList.add('is-hidden');
   }
 };
 
+const smoothScroll = () => {
+  const { height } = galleryEl.firstElementChild.getBoundingClientRect();
+  window.scrollBy({
+    top: height * 2,
+    behavior: 'smooth',
+  });
+};
+
+loadMoreBtnEl.addEventListener('click', onLoadMore);
 searchFormEl.addEventListener('submit', onSearchFormSubmit);
-LoadMoreBtnEl.addEventListener('click', onLoadMoreClick);
